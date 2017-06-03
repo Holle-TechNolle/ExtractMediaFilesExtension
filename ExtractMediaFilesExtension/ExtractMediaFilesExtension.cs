@@ -26,21 +26,17 @@ namespace ExtractMediaFilesExtension
 
         protected override ContextMenuStrip CreateMenu()
         {
-
             //  Create the menu strip.
             var menu = new ContextMenuStrip();
 
-            //  Create a 'count lines' item.
-            var itemCountLines = new ToolStripMenuItem
-            {
-                Text = "Extract media files"
-            };
+            //  Create a 'Extract media files' item.
+            var itemExtractMediaFiles = new ToolStripMenuItem { Text = "Extract media files" };
 
-            //  When we click, we'll call the 'CountLines' function.
-            itemCountLines.Click += (sender, args) => ExtractMediaFiles();
+            //  When we click, we'll call the 'ExtractMediaFiles' function.
+            itemExtractMediaFiles.Click += (sender, args) => ExtractMediaFiles();
 
             //  Add the item to the context menu.
-            menu.Items.Add(itemCountLines);
+            menu.Items.Add(itemExtractMediaFiles);
 
             //  Return the menu.
             return menu;
@@ -48,115 +44,89 @@ namespace ExtractMediaFilesExtension
 
         private void ExtractMediaFiles()
         {
-            List<string> extentions = new List<string> { "avi", "mp4", "mkv" };
-            List<string> subFiles = new List<string>();
-            string newFolderName = "Extracted Media Files";
-            string startFolder = string.Empty;
-
-            // Get all media subfiles
-            foreach (var sip in SelectedItemPaths)
+            try
             {
-                startFolder = Directory.GetParent(sip).ToString();
-                foreach (string e in extentions)
+                List<string> extensions = new List<string> { "avi", "mp4", "mkv", "flv" };
+                List<string> subFiles = new List<string>();
+                string newFolderName = "Extracted Media Files";
+                string startFolder = string.Empty;
+
+                // Get all media subfiles
+                foreach (var sip in SelectedItemPaths)
                 {
-                    string[] sf = Directory.GetFiles(sip, $"*.{e}");
-                    if (sf.Length > 0)
+                    startFolder = Directory.GetParent(sip).ToString(); // Does not need to run more than once, but who cares
+                    foreach (string e in extensions)
                     {
-                        subFiles.AddRange(sf);
+                        string[] sf = Directory.GetFiles(sip, $"*.{e}");
+                        if (sf.Length > 0)
+                        {
+                            subFiles.AddRange(sf);
+                        }
                     }
                 }
-            }
 
-            // Figure out the subfolder name
-            foreach (var sf in subFiles)
-            {
-                string fileName = Path.GetFileNameWithoutExtension(sf);
-                int indexOf = 0;
-                //MessageBox.Show($": {}");
-                var match = Regex.Match(fileName, @"((\.[sS][0-9]{2}[eE][0-9]{2}))");
-                indexOf = match.Index;
-                if (indexOf > 0)
+                // Figure out the new subfolder name
+                foreach (var sf in subFiles)
                 {
-                    newFolderName = fileName.Substring(0, indexOf);
-                    break;
+                    string fileName = Path.GetFileNameWithoutExtension(sf);
+                    int indexOf = 0;
+                    var match = Regex.Match(fileName, @"((\.[sS][0-9]{2}[eE][0-9]{2}))");
+                    //MessageBox.Show($"match: {match.ToString()}");
+                    indexOf = match.Index;
+                    if (indexOf > 0)
+                    {
+                        newFolderName = fileName.Substring(0, indexOf);
+                        break;
+                    }
                 }
-            }
 
-            // Have the user approve the new foldername
-            string value = newFolderName;
-            if (InputBox("Extraction folder", "Folder name:", ref value) == DialogResult.OK)
-            {
-                newFolderName = value;
-            }
-            else
-            {
-                return;
-            }
-
-            // Create the new subfolder (if it does not exist)
-            string newFolderPath = startFolder + @"\" + newFolderName;
-            if (!Directory.Exists(newFolderPath)) Directory.CreateDirectory(newFolderPath);
-
-            // Move the media files
-            List<string> movedFiles = new List<string>();
-            foreach (var f in subFiles)
-            {
-                string newFile = newFolderPath + @"\" + Path.GetFileName(f);
-                if (!File.Exists(newFile))
+                // Have the user approve the new foldername
+                string value = newFolderName;
+                if (MessageBoxes.InputBox("Extraction folder", "Folder name:", ref value) == DialogResult.OK)
                 {
-                    File.Move(f, newFile);
+                    newFolderName = value;
                 }
-                movedFiles.Add(Path.GetFileName(f));
+                else
+                {
+                    return;
+                }
+
+                // Create the new subfolder (if it does not exist)
+                string newFolderPath = startFolder + @"\" + newFolderName;
+                if (!Directory.Exists(newFolderPath)) Directory.CreateDirectory(newFolderPath);
+
+                // Move the media files
+                List<string> movedFiles = new List<string>();
+                foreach (var f in subFiles)
+                {
+                    string newFile = newFolderPath + @"\" + Path.GetFileName(f);
+                    if (!File.Exists(newFile))
+                    {
+                        try
+                        {
+                            File.Move(f, newFile);
+                            movedFiles.Add(Path.GetFileName(f));
+                        }
+                        catch (Exception e)
+                        {
+                            MessageBoxes.OutputBox($"Moving violation: {Path.GetFileName(f)}", $"Error: {e.Message}");
+                        }
+                    }
+                }
+
+                // Go tell it on the mountain
+                movedFiles.Sort();
+                if (movedFiles.Count == 0) movedFiles.Add("No files were moved");
+                string @out = movedFiles.Aggregate(new StringBuilder(),
+                      (sb, a) => sb.AppendLine(String.Join(",", a)),
+                      sb => sb.ToString());
+
+                MessageBoxes.OutputBox("Moved files", @out);
             }
-
-            movedFiles.Sort();
-            string @out = movedFiles.Aggregate(new StringBuilder(),
-                  (sb, a) => sb.AppendLine(String.Join(",", a)),
-                  sb => sb.ToString());
-            MessageBox.Show(@out);
-
-        }
-
-        public static DialogResult InputBox(string title, string promptText, ref string value)
-        {
-            Form form = new Form();
-            Label label = new Label();
-            TextBox textBox = new TextBox();
-            Button buttonOk = new Button();
-            Button buttonCancel = new Button();
-
-            form.Text = title;
-            label.Text = promptText;
-            textBox.Text = value;
-
-            buttonOk.Text = "OK";
-            buttonCancel.Text = "Cancel";
-            buttonOk.DialogResult = DialogResult.OK;
-            buttonCancel.DialogResult = DialogResult.Cancel;
-
-            label.SetBounds(9, 20, 372, 13);
-            textBox.SetBounds(12, 36, 372, 20);
-            buttonOk.SetBounds(228, 72, 75, 23);
-            buttonCancel.SetBounds(309, 72, 75, 23);
-
-            label.AutoSize = true;
-            textBox.Anchor = textBox.Anchor | AnchorStyles.Right;
-            buttonOk.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-            buttonCancel.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-
-            form.ClientSize = new Size(396, 107);
-            form.Controls.AddRange(new Control[] { label, textBox, buttonOk, buttonCancel });
-            form.ClientSize = new Size(Math.Max(300, label.Right + 10), form.ClientSize.Height);
-            form.FormBorderStyle = FormBorderStyle.FixedDialog;
-            form.StartPosition = FormStartPosition.CenterScreen;
-            form.MinimizeBox = false;
-            form.MaximizeBox = false;
-            form.AcceptButton = buttonOk;
-            form.CancelButton = buttonCancel;
-
-            DialogResult dialogResult = form.ShowDialog();
-            value = textBox.Text;
-            return dialogResult;
+            catch (Exception e)
+            {
+                MessageBoxes.OutputBox("Exception", e.Message);
+            }
         }
     }
 }
