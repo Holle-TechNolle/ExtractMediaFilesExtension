@@ -8,6 +8,7 @@ using System.IO;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using System.Linq;
+using SharpShell.Interop;
 
 namespace ExtractMediaFilesExtension
 {
@@ -51,10 +52,11 @@ namespace ExtractMediaFilesExtension
                 string newFolderName = "Extracted Media Files";
                 string startFolder = string.Empty;
 
+                startFolder = SelectedItemPaths.ElementAtOrDefault(0); // We know there will allways be at least one element
+
                 // Get all media subfiles
-                foreach (var sip in SelectedItemPaths)
+                foreach (var sip in SelectedItemPaths) // Those will all be folders
                 {
-                    startFolder = Directory.GetParent(sip).ToString(); // Does not need to run more than once, but who cares
                     foreach (string e in extensions)
                     {
                         string[] sf = Directory.GetFiles(sip, $"*.{e}");
@@ -94,7 +96,7 @@ namespace ExtractMediaFilesExtension
                 // Create the new subfolder (if it does not exist)
                 string newFolderPath = startFolder + @"\" + newFolderName;
                 if (!Directory.Exists(newFolderPath)) Directory.CreateDirectory(newFolderPath);
-
+                
                 // Move the media files
                 List<string> movedFiles = new List<string>();
                 foreach (var f in subFiles)
@@ -117,6 +119,7 @@ namespace ExtractMediaFilesExtension
                 // Go tell it on the mountain
                 movedFiles.Sort();
                 if (movedFiles.Count == 0) movedFiles.Add("No files were moved");
+                // Linebreaks
                 string @out = movedFiles.Aggregate(new StringBuilder(),
                       (sb, a) => sb.AppendLine(String.Join(",", a)),
                       sb => sb.ToString());
