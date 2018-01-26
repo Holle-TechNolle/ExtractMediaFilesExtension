@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExtractMediaFilesExtension", "ExtractMediaFilesExtension\ExtractMediaFilesExtension.csproj", "{61FAFAD7-7E29-41DF-AF85-DEF7BA0AD967}"
-EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "Setup", "Setup\Setup.vdproj", "{21101B73-1310-4B5B-BD16-8C2BCBA2942E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,10 +15,11 @@ Global
 		{61FAFAD7-7E29-41DF-AF85-DEF7BA0AD967}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{61FAFAD7-7E29-41DF-AF85-DEF7BA0AD967}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{61FAFAD7-7E29-41DF-AF85-DEF7BA0AD967}.Release|Any CPU.Build.0 = Release|Any CPU
-		{21101B73-1310-4B5B-BD16-8C2BCBA2942E}.Debug|Any CPU.ActiveCfg = Debug
-		{21101B73-1310-4B5B-BD16-8C2BCBA2942E}.Release|Any CPU.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BF08A995-2313-4229-91F7-8B21CB82701D}
 	EndGlobalSection
 EndGlobal

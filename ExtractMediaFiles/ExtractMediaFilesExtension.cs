@@ -52,15 +52,13 @@ namespace ExtractMediaFilesExtension
         {
             try
             {
-                List<string> extensions = new List<string> { "avi", "mp4", "mkv", "flv" };
+                List<string> extensions = new List<string> {"avi", "mp4", "mkv", "flv"};
                 List<string> subFiles = new List<string>();
-                string newFolderName = "A";
+                string newFolderName = "_Extracted Media Files";
                 string startFolder = string.Empty;
 
-                startFolder = Path.GetFullPath(Directory.GetParent(selectedItemPaths.ElementAtOrDefault(0)).ToString()); // We know there will allways be at least one element
-                //MessageBox.Show(startFolder, "startFolder");
+                startFolder = selectedItemPaths.ElementAtOrDefault(0); // We know there will allways be at least one element
 
-                //MessageBox.Show(selectedItemPaths.Count().ToString(), "selectedItemPaths.Count");
                 // Get all media subfiles
                 foreach (var sip in selectedItemPaths) // Those will all be folders
                 {
@@ -70,45 +68,23 @@ namespace ExtractMediaFilesExtension
                         if (sf.Length > 0)
                         {
                             subFiles.AddRange(sf);
-                            //foreach (string s in sf) { MessageBox.Show(s, "Selected file"); }
-                            //MessageBox.Show(subFiles.Count().ToString(), "subFiles.Count");
                         }
                     }
                 }
 
-                // Figure out the new subfolder (candidate) names
-                List<string> regExPatterns = new List<string>()
-                {
-                    @"(([sS][0-9]{2}))",
-                    @"((\d{4}[-_\.]\d{2}[-_\.]\d{2}))"
-                };
+                // Figure out the new subfolder names
                 List<string> newFolderNames = new List<string>();
                 foreach (var sf in subFiles)
                 {
                     string fileName = Path.GetFileNameWithoutExtension(sf);
                     int indexOf = 0;
-                    Match match = Regex.Match("abc", "somethingwewillnotfind");
-                    foreach (string regExPattern in regExPatterns)
-                    {
-                        match = Regex.Match(fileName, regExPattern);
-                        indexOf = match.Index;
-                        if (indexOf > 0) break;
-                    }
-
+                    var match = Regex.Match(fileName, @"((\.[sS][0-9]{2}[eE][0-9]{2}))");
                     //MessageBox.Show($"match: {match.ToString()}");
+                    indexOf = match.Index;
                     if (indexOf > 0)
                     {
-                        var newFName = fileName.Substring(0, indexOf).Trim();
-                        Regex.Replace(newFName, @"[-_\.]*$", "");
-                        if (newFName.Length > 0 && !newFolderNames.Contains(newFName))
-                        {
-                            newFolderNames.Add(newFName);
-                            //MessageBox.Show(newFName, "newFName");
-                        }
-                    }
-                    else
-                    {
-                        newFolderNames.Add(fileName); 
+                        var newFName = fileName.Substring(0, indexOf);
+                        if (newFName.Length > 0 && !newFolderNames.Contains(newFName)) newFolderNames.Add(newFName);
                     }
                 }
 
@@ -154,16 +130,14 @@ namespace ExtractMediaFilesExtension
 
                 foreach (var kf in killingFolders)
                 {
-                    //MessageBox.Show($"{kf}","Killing folder");
-                    if (Directory.Exists(kf) && kf != newFolderPath)
+                    if (Directory.Exists(kf))
                     {
                         try
                         {
-                            Directory.Delete(kf,true);
+                            Directory.Delete(kf);
                         }
                         catch (Exception)
                         {
-                            // Do nothing
                         }
                     }
                 }
